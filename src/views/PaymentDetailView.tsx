@@ -7,17 +7,51 @@ import {
   Link,
   Button,
 } from "@stripe/ui-extension-sdk/ui";
+import {
+  createHttpClient,
+  STRIPE_API_KEY,
+} from "@stripe/ui-extension-sdk/http_client";
 import type { ExtensionContextValue } from "@stripe/ui-extension-sdk/context";
-import { ICBillingo, ICStripe, Logo } from "../images";
+
+import { useEffect, useState } from "react";
+import { Logo } from "../images";
+
+import Stripe from "stripe";
+
+const stripe = new Stripe(STRIPE_API_KEY, {
+  httpClient: createHttpClient(),
+  apiVersion: "2023-08-16",
+});
 
 const PaymentDetailView = ({
   userContext,
   environment,
 }: ExtensionContextValue) => {
+  const paymentId = environment.objectContext?.id
+    ? environment.objectContext?.id
+    : "";
+  const [apiKey, setAPIKey] = useState("");
+
+  useEffect(() => {
+    const retrievePayments = async () => {
+      try {
+        if (paymentId === "") return;
+
+        const response = await stripe.paymentIntents.retrieve(paymentId);
+
+        console.log(response);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    retrievePayments();
+  }, []);
+
   return (
     <ContextView title="Add Your API Key" brandColor="#FF75BB" brandIcon={Logo}>
       <Box css={{ marginY: "small" }}>
-        <Link>
+        <Link href="https://dashboard.stripe.com/test/payments">
           <Inline css={{ fontWeight: "bold" }}>
             <Icon name="arrowLeft" /> Back
           </Inline>
@@ -32,7 +66,7 @@ const PaymentDetailView = ({
           label="Key"
           placeholder="dajfiafeifosa"
           onChange={(e) => {
-            console.log(e.target.value);
+            setAPIKey(e.target.value);
           }}
         />
       </Box>

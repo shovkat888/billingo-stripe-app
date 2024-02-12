@@ -3,7 +3,12 @@
   "version": "0.0.1",
   "name": "Billingo",
   "icon": "",
-  "permissions": [],
+  "permissions": [
+    {
+      "permission": "payment_intent_read",
+      "purpose": "Allows billingo app to read payment details"
+    }
+  ],
   "ui_extension": {
     "views": [
       {
