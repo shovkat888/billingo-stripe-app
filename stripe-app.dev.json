@@ -1,0 +1,11 @@
+{
+  "extends": "stripe-app.json",
+  "ui_extension": {
+    "content_security_policy": {
+      "connect-src": ["http://localhost:8000/api/v1/billingo"]
+    }
+  },
+  "constants": {
+    "API_BASE": "http://localhost:8000/api/v1/billingo"
+  }
+}

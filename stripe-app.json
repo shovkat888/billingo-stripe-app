@@ -25,9 +25,12 @@
       }
     ],
     "content_security_policy": {
-      "connect-src": null,
+      "connect-src": ["https://api.billingo.hu/v3"],
       "image-src": null,
       "purpose": ""
     }
+  },
+  "constants": {
+    "API_BASE": "https://api.billingo.hu/v3"
   }
 }
