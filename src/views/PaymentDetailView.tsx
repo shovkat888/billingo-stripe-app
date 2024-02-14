@@ -18,6 +18,7 @@ import type { ExtensionContextValue } from "@stripe/ui-extension-sdk/context";
 
 import { useEffect, useState } from "react";
 import { Logo } from "../images";
+import { currencies } from "../constants";
 import axios from "axios";
 
 import Stripe from "stripe";
@@ -41,14 +42,17 @@ const PaymentDetailView = ({
   const [bankAccounts, setBankAccounts] = useState([]);
   const [documentBlocks, setDocumentBlocks] = useState([]);
 
+  const [currency, setCurrency] = useState("HUF");
+  const [rate, setRate] = useState("1");
+
   useEffect(() => {
     const retrievePayments = async () => {
       try {
         if (paymentId === "") return;
 
-        const response = await stripe.paymentIntents.retrieve(paymentId);
+        const res = await stripe.paymentIntents.retrieve(paymentId);
 
-        console.log(response);
+        console.log(res);
       } catch (error) {
         console.log(error);
       }
@@ -125,6 +129,21 @@ const PaymentDetailView = ({
     }
   };
 
+  const getExchangeRate = async (e: any) => {
+    try {
+      const res = await axios.post(
+        `${environment.constants?.API_BASE}/currencies`,
+        {
+          apiKey: apiKey,
+          to: e.target.value,
+        }
+      );
+      setRate(res.data.conversation_rate);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
   const invoiceView = (
     <>
       <Box css={{ marginY: "small", stack: "y", gapY: "medium" }}>
@@ -190,24 +209,57 @@ const PaymentDetailView = ({
           <DateField label="Date of completion" />
         </FormFieldGroup>
 
-        <FormFieldGroup legend="Format">
-          <Select
-            name="accountblocks"
-            label="Account block"
-            onChange={(e) => {
-              console.log(e);
-            }}
-          >
-            {documentBlocks &&
-              documentBlocks.map((block: any, index: number) => {
-                return (
-                  <option key={index} value={block.id}>
-                    {block.name}
-                  </option>
-                );
-              })}
-          </Select>
+        <FormFieldGroup layout="column" legend="Format">
+          <Box>
+            <Select
+              name="accountblocks"
+              label="Account block"
+              onChange={(e) => {
+                console.log(e);
+              }}
+            >
+              {documentBlocks &&
+                documentBlocks.map((block: any, index: number) => {
+                  return (
+                    <option key={index} value={block.id}>
+                      {block.name}
+                    </option>
+                  );
+                })}
+            </Select>
+          </Box>
+          <Box css={{ stack: "x", gapX: "small" }}>
+            <Select
+              name="currency"
+              label="Currency"
+              onChange={getExchangeRate}
+              css={{ width: "1/2" }}
+            >
+              {currencies &&
+                currencies.map((currency: any, index: number) => {
+                  return (
+                    <option key={index} value={currency}>
+                      {currency}
+                    </option>
+                  );
+                })}
+            </Select>
+            <TextField
+              css={{ width: "1/2" }}
+              label="Exchange rate"
+              value={rate}
+              readOnly
+            />
+          </Box>
         </FormFieldGroup>
+
+        <Button
+          type="primary"
+          css={{ width: "fill", alignX: "center" }}
+          onPress={() => connect()}
+        >
+          Download Invoice
+        </Button>
       </Box>
     </>
   );
