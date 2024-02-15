@@ -49,15 +49,14 @@ const PaymentDetailView = ({
       try {
         if (paymentId === "") return;
 
-        const res = await stripe.paymentIntents.retrieve(paymentId);
-        console.log(res);
+        await stripe.paymentIntents.retrieve(paymentId);
       } catch (error) {
         console.log(error);
       }
     };
 
     retrievePayments();
-  }, []);
+  }, [paymentId]);
 
   useEffect(() => {
     stripe.apps.secrets
@@ -74,14 +73,15 @@ const PaymentDetailView = ({
         getDocumentBlocks(res.payload);
         setConnect(true);
       });
-  }, []);
+  }, [apiKey, isConnected]);
 
   const connect = async () => {
-    if (apiKey === null) {
+    if (apiKey === null || apiKey === "") {
+      showToast("API Key empty", { type: "caution" });
       return;
     }
 
-    const res = await stripe.apps.secrets.create({
+    await stripe.apps.secrets.create({
       scope: { type: "user", user: userContext.id },
       name: "BILLINGO_API_KEY",
       payload: apiKey,

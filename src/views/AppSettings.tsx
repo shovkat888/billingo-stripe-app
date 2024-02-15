@@ -41,7 +41,10 @@ const AppSettings = ({ userContext, environment }: ExtensionContextValue) => {
   }, []);
 
   const saveSecret = async () => {
-    if (apiKey === null) return;
+    if (apiKey === null || apiKey === "") {
+      showToast("API Key empty", { type: "caution" });
+      return;
+    }
 
     const res = await stripe.apps.secrets.create({
       scope: { type: "user", user: userContext.id },
