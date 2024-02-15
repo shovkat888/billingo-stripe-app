@@ -1,27 +1,31 @@
 {
   "id": "com.emidi.billingo",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "name": "Billingo",
   "icon": "",
   "permissions": [
     {
       "permission": "payment_intent_read",
       "purpose": "Allows billingo app to read payment details"
+    },
+    {
+      "permission": "secret_write",
+      "purpose": "Allows storing secrets between page reloads"
     }
   ],
   "ui_extension": {
     "views": [
       {
-        "viewport": "stripe.dashboard.customer.detail",
-        "component": "App"
-      },
-      {
         "viewport": "stripe.dashboard.payment.list",
-        "component": "PaymentListView"
+        "component": "App"
       },
       {
         "viewport": "stripe.dashboard.payment.detail",
         "component": "PaymentDetailView"
+      },
+      {
+        "viewport": "settings",
+        "component": "AppSettings"
       }
     ],
     "content_security_policy": {

@@ -10,6 +10,7 @@ import {
   FormFieldGroup,
   DateField,
 } from "@stripe/ui-extension-sdk/ui";
+import { showToast } from "@stripe/ui-extension-sdk/utils";
 import {
   createHttpClient,
   STRIPE_API_KEY,
@@ -24,7 +25,7 @@ import axios from "axios";
 import Stripe from "stripe";
 
 const stripe = new Stripe(STRIPE_API_KEY, {
-  httpClient: createHttpClient(),
+  httpClient: createHttpClient() as Stripe.HttpClient,
   apiVersion: "2023-08-16",
 });
 
@@ -35,14 +36,12 @@ const PaymentDetailView = ({
   const paymentId = environment.objectContext?.id
     ? environment.objectContext?.id
     : "";
-  const [apiKey, setAPIKey] = useState("");
+  const [apiKey, setAPIKey] = useState<string | null>(null);
   const [isConnected, setConnect] = useState(false);
   const [partners, setPartners] = useState([]);
   const [products, setProducts] = useState([]);
   const [bankAccounts, setBankAccounts] = useState([]);
   const [documentBlocks, setDocumentBlocks] = useState([]);
-
-  const [currency, setCurrency] = useState("HUF");
   const [rate, setRate] = useState("1");
 
   useEffect(() => {
@@ -51,7 +50,6 @@ const PaymentDetailView = ({
         if (paymentId === "") return;
 
         const res = await stripe.paymentIntents.retrieve(paymentId);
-
         console.log(res);
       } catch (error) {
         console.log(error);
@@ -61,20 +59,45 @@ const PaymentDetailView = ({
     retrievePayments();
   }, []);
 
+  useEffect(() => {
+    stripe.apps.secrets
+      .find({
+        scope: { type: "user", user: userContext.id },
+        name: "BILLINGO_API_KEY",
+        expand: ["payload"],
+      })
+      .then((res) => {
+        setAPIKey(res.payload);
+        getPartners(res.payload);
+        getProducts(res.payload);
+        getBankAccounts(res.payload);
+        getDocumentBlocks(res.payload);
+        setConnect(true);
+      });
+  }, []);
+
   const connect = async () => {
-    if (apiKey === "") {
+    if (apiKey === null) {
       return;
     }
 
+    const res = await stripe.apps.secrets.create({
+      scope: { type: "user", user: userContext.id },
+      name: "BILLINGO_API_KEY",
+      payload: apiKey,
+    });
+
     setConnect(true);
-    getPartners();
-    getProducts();
-    getBankAccounts();
-    getDocumentBlocks();
+    getPartners(apiKey);
+    getProducts(apiKey);
+    getBankAccounts(apiKey);
+    getDocumentBlocks(apiKey);
   };
 
-  const getPartners = async () => {
+  const getPartners = async (apiKey: null | string) => {
     try {
+      if (apiKey === null) return;
+
       const res = await axios.post(
         `${environment.constants?.API_BASE}/partners`,
         {
@@ -87,8 +110,10 @@ const PaymentDetailView = ({
     }
   };
 
-  const getBankAccounts = async () => {
+  const getBankAccounts = async (apiKey: null | string) => {
     try {
+      if (apiKey === null) return;
+
       const res = await axios.post(
         `${environment.constants?.API_BASE}/bank-accounts`,
         {
@@ -101,8 +126,10 @@ const PaymentDetailView = ({
     }
   };
 
-  const getDocumentBlocks = async () => {
+  const getDocumentBlocks = async (apiKey: null | string) => {
     try {
+      if (apiKey === null) return;
+
       const res = await axios.post(
         `${environment.constants?.API_BASE}/document-blocks`,
         {
@@ -115,8 +142,10 @@ const PaymentDetailView = ({
     }
   };
 
-  const getProducts = async () => {
+  const getProducts = async (apiKey: null | string) => {
     try {
+      if (apiKey === null) return;
+
       const res = await axios.post(
         `${environment.constants?.API_BASE}/products`,
         {
@@ -253,13 +282,22 @@ const PaymentDetailView = ({
           </Box>
         </FormFieldGroup>
 
-        <Button
-          type="primary"
-          css={{ width: "fill", alignX: "center" }}
-          onPress={() => connect()}
-        >
-          Download Invoice
-        </Button>
+        <Box css={{ stack: "x", gapX: "small" }}>
+          <Button
+            type="primary"
+            css={{ width: "fill", alignX: "center" }}
+            onPress={() => connect()}
+          >
+            <Icon name="invoice" size="small" />
+            Generate Invoice
+          </Button>
+          <Button
+            css={{ width: "1/6", alignX: "center" }}
+            onPress={() => connect()}
+          >
+            <Icon name="download" size="small" css={{ fill: "brand" }} />
+          </Button>
+        </Box>
       </Box>
     </>
   );
@@ -296,7 +334,7 @@ const PaymentDetailView = ({
       brandIcon={Logo}
     >
       <Box css={{ marginY: "xxsmall" }}>
-        <Link href="https://dashboard.stripe.com/test/payments">
+        <Link href="https://dashboard.stripe.com/payments">
           <Inline css={{ fontWeight: "bold" }}>
             <Icon name="arrowLeft" /> Back
           </Inline>
