@@ -17,10 +17,11 @@ import {
 } from "@stripe/ui-extension-sdk/http_client";
 import type { ExtensionContextValue } from "@stripe/ui-extension-sdk/context";
 
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { Logo } from "../images";
 import { currencies } from "../constants";
 import axios from "axios";
+import { IPartner, IProduct, IBankAccount, IDocumentBlock } from "../types";
 
 import Stripe from "stripe";
 
@@ -166,7 +167,7 @@ const PaymentDetailView = ({
     }
   };
 
-  const getExchangeRate = async (e: any) => {
+  const getExchangeRate = async (e: ChangeEvent<HTMLSelectElement>) => {
     try {
       const res = await axios.post(
         `${environment.constants?.API_BASE}/currencies`,
@@ -215,7 +216,7 @@ const PaymentDetailView = ({
         >
           <option value="">Choose a Partner</option>
           {partners &&
-            partners.map((partner: any, index: number) => {
+            partners.map((partner: IPartner, index: number) => {
               return (
                 <option key={index} value={partner.id}>
                   {partner.name}
@@ -232,7 +233,7 @@ const PaymentDetailView = ({
           }}
         >
           {bankAccounts &&
-            bankAccounts.map((account: any, index: number) => {
+            bankAccounts.map((account: IBankAccount, index: number) => {
               return (
                 <option key={index} value={account.id}>
                   {account.name +
@@ -254,7 +255,7 @@ const PaymentDetailView = ({
           }}
         >
           {products &&
-            products.map((product: any, index: number) => {
+            products.map((product: IProduct, index: number) => {
               return (
                 <option key={index} value={product.id}>
                   {product.name}
@@ -284,7 +285,7 @@ const PaymentDetailView = ({
               }}
             >
               {documentBlocks &&
-                documentBlocks.map((block: any, index: number) => {
+                documentBlocks.map((block: IDocumentBlock, index: number) => {
                   return (
                     <option key={index} value={block.id}>
                       {block.name}
@@ -301,7 +302,7 @@ const PaymentDetailView = ({
               css={{ width: "1/2" }}
             >
               {currencies &&
-                currencies.map((currency: any, index: number) => {
+                currencies.map((currency: string, index: number) => {
                   return (
                     <option key={index} value={currency}>
                       {currency}
