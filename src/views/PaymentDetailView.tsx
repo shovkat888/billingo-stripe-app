@@ -42,7 +42,15 @@ const PaymentDetailView = ({
   const [products, setProducts] = useState([]);
   const [bankAccounts, setBankAccounts] = useState([]);
   const [documentBlocks, setDocumentBlocks] = useState([]);
-  const [rate, setRate] = useState("1");
+  const [rate, setRate] = useState(1);
+
+  const [partnerId, setPartnerId] = useState("");
+  const [blockId, setBlockId] = useState("");
+  const [bankId, setBankId] = useState("");
+  const [productId, setProductId] = useState("");
+  const [currency, setCurrency] = useState("HUF");
+  const [dueDate, setDueDate] = useState("");
+  const [fulFillmentDate, setFulFillmentDate] = useState("");
 
   useEffect(() => {
     const retrievePayments = async () => {
@@ -168,6 +176,28 @@ const PaymentDetailView = ({
         }
       );
       setRate(res.data.conversation_rate);
+      setCurrency(e.target.value);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const createInvoice = async () => {
+    try {
+      const res = await axios.post(
+        `${environment.constants?.API_BASE}/documents`,
+        {
+          apiKey: apiKey,
+          partnerId: partnerId,
+          blockId: blockId,
+          bankId: bankId,
+          currency: currency,
+          conversionRate: rate,
+          productId: productId,
+          dueDate: dueDate,
+          fulFillmentDate: fulFillmentDate,
+        }
+      );
     } catch (e) {
       console.log(e);
     }
@@ -180,7 +210,7 @@ const PaymentDetailView = ({
           name="partner"
           label="Partner name"
           onChange={(e) => {
-            console.log(e);
+            setPartnerId(e.target.value);
           }}
         >
           <option value="">Choose a Partner</option>
@@ -198,7 +228,7 @@ const PaymentDetailView = ({
           name="bank"
           label="Your bank account number"
           onChange={(e) => {
-            console.log(e);
+            setBankId(e.target.value);
           }}
         >
           {bankAccounts &&
@@ -220,7 +250,7 @@ const PaymentDetailView = ({
           name="products"
           label="Product name"
           onChange={(e) => {
-            console.log(e);
+            setProductId(e.target.value);
           }}
         >
           {products &&
@@ -234,8 +264,14 @@ const PaymentDetailView = ({
         </Select>
 
         <FormFieldGroup legend="Dates">
-          <DateField label="Invoice date" />
-          <DateField label="Date of completion" />
+          <DateField
+            label="Invoice date"
+            onChange={(e) => setDueDate(e.target.value)}
+          />
+          <DateField
+            label="Date of completion"
+            onChange={(e) => setFulFillmentDate(e.target.value)}
+          />
         </FormFieldGroup>
 
         <FormFieldGroup layout="column" legend="Format">
@@ -244,7 +280,7 @@ const PaymentDetailView = ({
               name="accountblocks"
               label="Account block"
               onChange={(e) => {
-                console.log(e);
+                setBlockId(e.target.value);
               }}
             >
               {documentBlocks &&
@@ -286,7 +322,7 @@ const PaymentDetailView = ({
           <Button
             type="primary"
             css={{ width: "fill", alignX: "center" }}
-            onPress={() => connect()}
+            onPress={() => createInvoice()}
           >
             <Icon name="invoice" size="small" />
             Generate Invoice
@@ -329,7 +365,7 @@ const PaymentDetailView = ({
 
   return (
     <ContextView
-      title={isConnected === true ? "Invoices" : "Add Your API Key"}
+      title={isConnected === true ? "Invoice" : "Add Your API Key"}
       brandColor="#FF75BB"
       brandIcon={Logo}
     >
