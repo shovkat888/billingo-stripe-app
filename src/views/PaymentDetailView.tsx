@@ -77,7 +77,6 @@ const PaymentDetailView = ({
       .then((res) => {
         setAPIKey(res.payload);
         getPartners(res.payload);
-        getProducts(res.payload);
         getBankAccounts(res.payload);
         getDocumentBlocks(res.payload);
         setConnect(true);
@@ -98,7 +97,6 @@ const PaymentDetailView = ({
 
     setConnect(true);
     getPartners(apiKey);
-    getProducts(apiKey);
     getBankAccounts(apiKey);
     getDocumentBlocks(apiKey);
   };
@@ -151,22 +149,6 @@ const PaymentDetailView = ({
     }
   };
 
-  const getProducts = async (apiKey: null | string) => {
-    try {
-      if (apiKey === null) return;
-
-      const res = await axios.post(
-        `${environment.constants?.API_BASE}/products`,
-        {
-          apiKey: apiKey,
-        }
-      );
-      setProducts(res.data);
-    } catch (e) {
-      console.log(e);
-    }
-  };
-
   const getExchangeRate = async (e: ChangeEvent<HTMLSelectElement>) => {
     try {
       const res = await axios.post(
@@ -178,6 +160,22 @@ const PaymentDetailView = ({
       );
       setRate(res.data.conversation_rate);
       setCurrency(e.target.value);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const handleChangeProduct = async (e: ChangeEvent<HTMLInputElement>) => {
+    try {
+      const res = await axios.post(
+        `${environment.constants?.API_BASE}/productsbyquery`,
+        {
+          apiKey: apiKey,
+          query: e.target.value,
+        }
+      );
+
+      setProducts(res.data);
     } catch (e) {
       console.log(e);
     }
@@ -232,6 +230,7 @@ const PaymentDetailView = ({
             setBankId(e.target.value);
           }}
         >
+          <option value="">Choose a Bank Account</option>
           {bankAccounts &&
             bankAccounts.map((account: IBankAccount, index: number) => {
               return (
@@ -247,22 +246,29 @@ const PaymentDetailView = ({
             })}
         </Select>
 
-        <Select
-          name="products"
-          label="Product name"
-          onChange={(e) => {
-            setProductId(e.target.value);
-          }}
-        >
-          {products &&
-            products.map((product: IProduct, index: number) => {
-              return (
-                <option key={index} value={product.id}>
-                  {product.name}
-                </option>
-              );
-            })}
-        </Select>
+        <FormFieldGroup layout="column" legend="Products">
+          <TextField
+            css={{ width: "fill" }}
+            label="Product name"
+            onChange={handleChangeProduct}
+          />
+          <Select
+            name="products"
+            onChange={(e) => {
+              setProductId(e.target.value);
+            }}
+          >
+            <option value="">Choose a Product</option>
+            {products &&
+              products.map((product: IProduct, index: number) => {
+                return (
+                  <option key={index} value={product.id}>
+                    {product.name}
+                  </option>
+                );
+              })}
+          </Select>
+        </FormFieldGroup>
 
         <FormFieldGroup legend="Dates">
           <DateField
