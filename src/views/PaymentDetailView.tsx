@@ -53,6 +53,8 @@ const PaymentDetailView = ({
   const [dueDate, setDueDate] = useState("");
   const [fulFillmentDate, setFulFillmentDate] = useState("");
 
+  const [documentId, setDocumentId] = useState(null);
+
   useEffect(() => {
     const retrievePayments = async () => {
       try {
@@ -197,10 +199,52 @@ const PaymentDetailView = ({
           fulFillmentDate: fulFillmentDate,
         }
       );
+
+      if (res.data) {
+        showToast("Invoice created successfully", { type: "success" });
+        setDocumentId(res.data.id);
+      }
+    } catch (e: any) {
+      showToast("Unexpected Error occurred", { type: "caution" });
+    }
+  };
+
+  const downloadInvoice = async () => {
+    // if (documentId === null) {
+    //   showToast("No Invoice Exists", { type: "caution" });
+    //   return;
+    // }
+    try {
+      const res = await axios.post(
+        `${environment.constants?.API_BASE}/document/download`,
+        {
+          apiKey: apiKey,
+          id: "70106526",
+        }
+      );
+
+      console.log(res.data, res.headers);
+      // downloadPdfFromBlob(res.data);
     } catch (e) {
       console.log(e);
     }
   };
+
+  function downloadPdfFromBlob(blobData: any, filename = "download.pdf") {
+    const url = window.URL.createObjectURL(
+      new Blob([new Uint8Array(blobData)])
+    );
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    window.URL.revokeObjectURL(url);
+  }
 
   const invoiceView = (
     <>
@@ -272,7 +316,7 @@ const PaymentDetailView = ({
 
         <FormFieldGroup legend="Dates">
           <DateField
-            label="Invoice date"
+            label="Due date"
             onChange={(e) => setDueDate(e.target.value)}
           />
           <DateField
@@ -336,7 +380,7 @@ const PaymentDetailView = ({
           </Button>
           <Button
             css={{ width: "1/6", alignX: "center" }}
-            onPress={() => connect()}
+            onPress={() => downloadInvoice()}
           >
             <Icon name="download" size="small" css={{ fill: "brand" }} />
           </Button>
