@@ -15,7 +15,7 @@ const stripe = new Stripe(STRIPE_API_KEY, {
 });
 
 const AppSettings = ({ userContext, environment }: ExtensionContextValue) => {
-  const [apiKey, setAPIKey] = useState<string | null>();
+  const [apiKey, setAPIKey] = useState<any>();
 
   useEffect(() => {
     stripe.apps.secrets
@@ -25,12 +25,6 @@ const AppSettings = ({ userContext, environment }: ExtensionContextValue) => {
         expand: ["payload"],
       })
       .then((res) => setAPIKey(res.payload));
-
-    stripe.apps.secrets
-      .list({
-        scope: { type: "user", user: userContext.id },
-      })
-      .then((resp) => console.log(resp.data));
   }, []);
 
   const saveSecret = async () => {

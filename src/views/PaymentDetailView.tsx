@@ -34,9 +34,6 @@ const PaymentDetailView = ({
   userContext,
   environment,
 }: ExtensionContextValue) => {
-  const paymentId = environment.objectContext?.id
-    ? environment.objectContext?.id
-    : "";
   const [apiKey, setAPIKey] = useState<string | null>(null);
   const [isConnected, setConnect] = useState(false);
   const [partners, setPartners] = useState([]);
@@ -52,22 +49,6 @@ const PaymentDetailView = ({
   const [currency, setCurrency] = useState("HUF");
   const [dueDate, setDueDate] = useState("");
   const [fulFillmentDate, setFulFillmentDate] = useState("");
-
-  const [documentId, setDocumentId] = useState(null);
-
-  useEffect(() => {
-    const retrievePayments = async () => {
-      try {
-        if (paymentId === "") return;
-
-        await stripe.paymentIntents.retrieve(paymentId);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    retrievePayments();
-  }, [paymentId]);
 
   useEffect(() => {
     stripe.apps.secrets
@@ -115,7 +96,7 @@ const PaymentDetailView = ({
       );
       setPartners(res.data);
     } catch (e) {
-      console.log(e);
+      showToast("Your API KEY is invalid", { type: "caution" });
     }
   };
 
@@ -202,49 +183,11 @@ const PaymentDetailView = ({
 
       if (res.data) {
         showToast("Invoice created successfully", { type: "success" });
-        setDocumentId(res.data.id);
       }
-    } catch (e: any) {
+    } catch (e) {
       showToast("Unexpected Error occurred", { type: "caution" });
     }
   };
-
-  const downloadInvoice = async () => {
-    // if (documentId === null) {
-    //   showToast("No Invoice Exists", { type: "caution" });
-    //   return;
-    // }
-    try {
-      const res = await axios.post(
-        `${environment.constants?.API_BASE}/document/download`,
-        {
-          apiKey: apiKey,
-          id: "70106526",
-        }
-      );
-
-      console.log(res.data, res.headers);
-      // downloadPdfFromBlob(res.data);
-    } catch (e) {
-      console.log(e);
-    }
-  };
-
-  function downloadPdfFromBlob(blobData: any, filename = "download.pdf") {
-    const url = window.URL.createObjectURL(
-      new Blob([new Uint8Array(blobData)])
-    );
-
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    window.URL.revokeObjectURL(url);
-  }
 
   const invoiceView = (
     <>
@@ -377,12 +320,6 @@ const PaymentDetailView = ({
           >
             <Icon name="invoice" size="small" />
             Generate Invoice
-          </Button>
-          <Button
-            css={{ width: "1/6", alignX: "center" }}
-            onPress={() => downloadInvoice()}
-          >
-            <Icon name="download" size="small" css={{ fill: "brand" }} />
           </Button>
         </Box>
       </Box>

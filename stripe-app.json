@@ -1,8 +1,8 @@
 {
   "id": "com.emidi.billingo",
-  "version": "0.1.0",
+  "version": "1.0.2",
   "name": "Billingo",
-  "icon": "",
+  "icon": "./icon.png",
   "permissions": [
     {
       "permission": "payment_intent_read",
@@ -29,12 +29,15 @@
       }
     ],
     "content_security_policy": {
-      "connect-src": ["https://api.billingo.hu/v3"],
+      "connect-src": [
+        "https://billingo-stripe-backend.onrender.com/api/v1/billingo/"
+      ],
       "image-src": null,
       "purpose": ""
     }
   },
   "constants": {
-    "API_BASE": "https://api.billingo.hu/v3"
-  }
+    "API_BASE": "https://billingo-stripe-backend.onrender.com/api/v1/billingo/"
+  },
+  "distribution_type": "public"
 }

@@ -16,7 +16,7 @@ const App = ({ userContext, environment }: ExtensionContextValue) => {
       footerContent={
         <Box css={{ stack: "x", alignX: "center", gapX: "xsmall" }}>
           Don`t have an account?
-          <Link href="https://app.billingo.hu/auth/registration">Sign up</Link>
+          <Link href="https://app.billingo.hu/auth/registration" target="_blank">Sign up</Link>
         </Box>
       }
       brandColor="#FF75BB"
