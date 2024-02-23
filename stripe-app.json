@@ -30,14 +30,14 @@
     ],
     "content_security_policy": {
       "connect-src": [
-        "https://billingo-stripe-backend.onrender.com/api/v1/billingo/"
+        "https://billingo-stripe-backend-c433.onrender.com/api/v1/billingo/"
       ],
       "image-src": null,
       "purpose": ""
     }
   },
   "constants": {
-    "API_BASE": "https://billingo-stripe-backend.onrender.com/api/v1/billingo/"
+    "API_BASE": "https://billingo-stripe-backend-c433.onrender.com/api/v1/billingo/"
   },
   "distribution_type": "public"
 }
