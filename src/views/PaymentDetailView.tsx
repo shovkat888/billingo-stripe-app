@@ -9,6 +9,7 @@ import {
   Select,
   FormFieldGroup,
   DateField,
+  Spinner,
 } from "@stripe/ui-extension-sdk/ui";
 import { showToast } from "@stripe/ui-extension-sdk/utils";
 import {
@@ -36,6 +37,7 @@ const PaymentDetailView = ({
 }: ExtensionContextValue) => {
   const [apiKey, setAPIKey] = useState<string | null>(null);
   const [isConnected, setConnect] = useState(false);
+  const [isLoading, setLoading] = useState(false);
   const [partners, setPartners] = useState([]);
   const [products, setProducts] = useState([]);
   const [bankAccounts, setBankAccounts] = useState([]);
@@ -59,34 +61,19 @@ const PaymentDetailView = ({
       })
       .then((res) => {
         setAPIKey(res.payload);
-        getPartners(res.payload);
-        getBankAccounts(res.payload);
-        getDocumentBlocks(res.payload);
-        setConnect(true);
+
+        Promise.all([
+          getPartners(res.payload),
+          getBankAccounts(res.payload),
+          getDocumentBlocks(res.payload),
+        ]);
       });
-  }, [apiKey, isConnected]);
-
-  const connect = async () => {
-    if (apiKey === null || apiKey === "") {
-      showToast("API Key empty", { type: "caution" });
-      return;
-    }
-
-    await stripe.apps.secrets.create({
-      scope: { type: "user", user: userContext.id },
-      name: "BILLINGO_API_KEY",
-      payload: apiKey,
-    });
-
-    setConnect(true);
-    getPartners(apiKey);
-    getBankAccounts(apiKey);
-    getDocumentBlocks(apiKey);
-  };
+  }, []);
 
   const getPartners = async (apiKey: null | string) => {
     try {
       if (apiKey === null) return;
+      setLoading(true);
 
       const res = await axios.post(
         `${environment.constants?.API_BASE}/partners`,
@@ -95,8 +82,12 @@ const PaymentDetailView = ({
         }
       );
       setPartners(res.data);
+      setLoading(false);
+      setConnect(true);
     } catch (e) {
       showToast("Your API KEY is invalid", { type: "caution" });
+      setLoading(false);
+      setConnect(false);
     }
   };
 
@@ -329,31 +320,14 @@ const PaymentDetailView = ({
   const apiKeyView = (
     <>
       <Inline css={{ font: "body", fontFamily: "ui" }}>
-        Enter your API Secret Key from Billingo. You’ll need a Payed
-        Subscription to have one.
+        There is no Billingo API Key now. You should add API Key first.
       </Inline>
-      <Box css={{ marginY: "medium" }}>
-        <TextField
-          label="Key"
-          placeholder="e5c2335a-470d-11ee-b3ab-12hf9760f844"
-          onChange={(e) => {
-            setAPIKey(e.target.value);
-          }}
-        />
-      </Box>
-      <Button
-        type="primary"
-        css={{ width: "fill", alignX: "center" }}
-        onPress={() => connect()}
-      >
-        Connect
-      </Button>
     </>
   );
 
   return (
     <ContextView
-      title={isConnected === true ? "Invoice" : "Add Your API Key"}
+      title={isConnected === true ? "Invoice" : "Loading"}
       brandColor="#FF75BB"
       brandIcon={Logo}
     >
@@ -364,7 +338,15 @@ const PaymentDetailView = ({
           </Inline>
         </Link>
       </Box>
-      {isConnected === true ? invoiceView : apiKeyView}
+      {isLoading === true ? (
+        <Box css={{ stack: "x", alignX: "center" }}>
+          <Spinner size="large" />
+        </Box>
+      ) : isConnected === true ? (
+        invoiceView
+      ) : (
+        apiKeyView
+      )}
     </ContextView>
   );
 };

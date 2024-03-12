@@ -1,4 +1,9 @@
-import { Box, SettingsView, TextField } from "@stripe/ui-extension-sdk/ui";
+import {
+  Box,
+  Inline,
+  SettingsView,
+  TextField,
+} from "@stripe/ui-extension-sdk/ui";
 import { showToast } from "@stripe/ui-extension-sdk/utils";
 import {
   createHttpClient,
@@ -6,6 +11,7 @@ import {
 } from "@stripe/ui-extension-sdk/http_client";
 import type { ExtensionContextValue } from "@stripe/ui-extension-sdk/context";
 import { useEffect, useState } from "react";
+import axios from "axios";
 
 import Stripe from "stripe";
 
@@ -33,14 +39,38 @@ const AppSettings = ({ userContext, environment }: ExtensionContextValue) => {
       return;
     }
 
-    const res = await stripe.apps.secrets.create({
-      scope: { type: "user", user: userContext.id },
-      name: "BILLINGO_API_KEY",
-      payload: apiKey,
-    });
+    const isValid = await getPartners(apiKey);
+    if (isValid) {
+      const res = await stripe.apps.secrets.create({
+        scope: { type: "user", user: userContext.id },
+        name: "BILLINGO_API_KEY",
+        payload: apiKey,
+      });
+      setAPIKey(res.payload);
 
-    setAPIKey(res.payload);
-    showToast("Changes saved", { type: "success" });
+      showToast("Changes saved", { type: "success" });
+    }
+  };
+
+  const getPartners = async (apiKey: null | string) => {
+    try {
+      if (apiKey === null) return;
+
+      const res = await axios.post(
+        `${environment.constants?.API_BASE}/partners`,
+        {
+          apiKey: apiKey,
+        }
+      );
+
+      if (res) {
+        showToast("The API key is valid.", { type: "success" });
+        return true;
+      }
+    } catch (e) {
+      showToast("The API key is invalid.", { type: "caution" });
+      return false;
+    }
   };
 
   return (
@@ -50,8 +80,14 @@ const AppSettings = ({ userContext, environment }: ExtensionContextValue) => {
           background: "container",
           borderRadius: "medium",
           padding: "large",
+          stack: "y",
+          gapY: "medium",
         }}
       >
+        <Inline>
+          Please input your API Secret Key from Billingo. A Paid Subscription is
+          required to obtain one.
+        </Inline>
         <TextField
           label="API Key"
           onChange={(e) => setAPIKey(e.target.value)}

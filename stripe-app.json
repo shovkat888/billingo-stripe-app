@@ -1,7 +1,7 @@
 {
   "id": "com.emidi.billingo",
-  "version": "1.0.2",
-  "name": "Billingo",
+  "version": "1.0.7",
+  "name": "Billingo Connect",
   "icon": "./icon.png",
   "permissions": [
     {
@@ -39,5 +39,10 @@
   "constants": {
     "API_BASE": "https://billingo-stripe-backend-c433.onrender.com/api/v1/billingo/"
   },
+  "allowed_redirect_uris": [
+    "https://dashboard.stripe.com/test/apps-oauth/com.emidi.billingo",
+    "https://dashboard.stripe.com/apps-oauth/com.emidi.billingo"
+  ],
+  "stripe_api_access_type": "oauth",
   "distribution_type": "public"
 }

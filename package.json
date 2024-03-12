@@ -1,9 +1,9 @@
 {
-  "name": "com.emidi.billingo",
+  "name": "com.edimi.billingo",
   "version": "0.0.1",
-  "description": "Test",
+  "description": "Billingo Connect for Generating Invoices",
   "private": true,
-  "license": "~~proprietary~~",
+  "license": "MIT",
   "dependencies": {
     "@stripe/ui-extension-sdk": "^8.8.0",
     "axios": "^1.6.7",
