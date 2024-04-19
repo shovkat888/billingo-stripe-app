@@ -1,6 +1,6 @@
 {
   "id": "com.emidi.billingo",
-  "version": "1.0.7",
+  "version": "1.0.10",
   "name": "Billingo Connect",
   "icon": "./icon.png",
   "permissions": [
@@ -30,19 +30,15 @@
     ],
     "content_security_policy": {
       "connect-src": [
-        "https://billingo-stripe-backend-c433.onrender.com/api/v1/billingo/"
+        "https://billingo-stripe-backend.onrender.com/api/v1/billingo/"
       ],
       "image-src": null,
       "purpose": ""
     }
   },
   "constants": {
-    "API_BASE": "https://billingo-stripe-backend-c433.onrender.com/api/v1/billingo/"
+    "API_BASE": "https://billingo-stripe-backend.onrender.com/api/v1/billingo/"
   },
-  "allowed_redirect_uris": [
-    "https://dashboard.stripe.com/test/apps-oauth/com.emidi.billingo",
-    "https://dashboard.stripe.com/apps-oauth/com.emidi.billingo"
-  ],
-  "stripe_api_access_type": "oauth",
+  "stripe_api_access_type": "platform",
   "distribution_type": "public"
 }

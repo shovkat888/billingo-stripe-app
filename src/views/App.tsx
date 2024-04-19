@@ -50,7 +50,7 @@ const App = ({ userContext, environment }: ExtensionContextValue) => {
 
   const connect = async () => {
     if (apiKey === null || apiKey === "") {
-      showToast("API Key empty", { type: "caution" });
+      showToast("API key is empty", { type: "caution" });
       return;
     }
 

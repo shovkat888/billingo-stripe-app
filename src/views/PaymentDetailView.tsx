@@ -19,8 +19,9 @@ import {
 import type { ExtensionContextValue } from "@stripe/ui-extension-sdk/context";
 
 import { ChangeEvent, useEffect, useState } from "react";
+import { useDebouncedCallback } from "use-debounce";
 import { Logo } from "../images";
-import { currencies } from "../constants";
+// import { currencies } from "../constants";
 import axios from "axios";
 import { IPartner, IProduct, IBankAccount, IDocumentBlock } from "../types";
 
@@ -38,19 +39,22 @@ const PaymentDetailView = ({
   const [apiKey, setAPIKey] = useState<string | null>(null);
   const [isConnected, setConnect] = useState(false);
   const [isLoading, setLoading] = useState(false);
+  const [isGenerating, setGenerating] = useState(false);
   const [partners, setPartners] = useState([]);
   const [products, setProducts] = useState([]);
   const [bankAccounts, setBankAccounts] = useState([]);
   const [documentBlocks, setDocumentBlocks] = useState([]);
-  const [rate, setRate] = useState(1);
+  // const [rate, setRate] = useState(1);
 
   const [partnerId, setPartnerId] = useState("");
   const [blockId, setBlockId] = useState("");
   const [bankId, setBankId] = useState("");
   const [productId, setProductId] = useState("");
-  const [currency, setCurrency] = useState("HUF");
+  // const [currency, setCurrency] = useState("HUF");
   const [dueDate, setDueDate] = useState("");
   const [fulFillmentDate, setFulFillmentDate] = useState("");
+
+  const [isDisable, setDisable] = useState(true);
 
   useEffect(() => {
     stripe.apps.secrets
@@ -85,7 +89,7 @@ const PaymentDetailView = ({
       setLoading(false);
       setConnect(true);
     } catch (e) {
-      showToast("Your API KEY is invalid", { type: "caution" });
+      showToast("Your API key is invalid", { type: "caution" });
       setLoading(false);
       setConnect(false);
     }
@@ -123,39 +127,76 @@ const PaymentDetailView = ({
     }
   };
 
-  const getExchangeRate = async (e: ChangeEvent<HTMLSelectElement>) => {
-    try {
-      const res = await axios.post(
-        `${environment.constants?.API_BASE}/currencies`,
-        {
-          apiKey: apiKey,
-          to: e.target.value,
-        }
-      );
-      setRate(res.data.conversation_rate);
-      setCurrency(e.target.value);
-    } catch (e) {
-      console.log(e);
-    }
-  };
+  // const getExchangeRate = async (e: ChangeEvent<HTMLSelectElement>) => {
+  //   try {
+  //     const res = await axios.post(
+  //       `${environment.constants?.API_BASE}/currencies`,
+  //       {
+  //         apiKey: apiKey,
+  //         to: e.target.value,
+  //       }
+  //     );
+  //     setRate(res.data.conversation_rate);
+  //     setCurrency(e.target.value);
+  //   } catch (e) {
+  //     console.log(e);
+  //   }
+  // };
 
-  const handleChangeProduct = async (e: ChangeEvent<HTMLInputElement>) => {
+  const debounced = useDebouncedCallback(async (value) => {
     try {
       const res = await axios.post(
         `${environment.constants?.API_BASE}/productsbyquery`,
         {
           apiKey: apiKey,
-          query: e.target.value,
+          query: value,
         }
       );
 
+      if (res.data.length === 0) {
+        setDisable(true);
+        showToast("Invalid product name", { type: "caution" });
+        return;
+      }
       setProducts(res.data);
+      setDisable(false);
     } catch (e) {
       console.log(e);
     }
-  };
+  }, 1000);
 
   const createInvoice = async () => {
+    if (partnerId === "") {
+      showToast("Please choose partner", { type: "caution" });
+      return;
+    }
+
+    if (bankId === "") {
+      showToast("Please choose bank", { type: "caution" });
+      return;
+    }
+
+    if (blockId === "") {
+      showToast("Please choose acount block", { type: "caution" });
+      return;
+    }
+
+    if (productId === "") {
+      showToast("Please choose product", { type: "caution" });
+      return;
+    }
+
+    if (dueDate === "") {
+      showToast("Please choose due date", { type: "caution" });
+      return;
+    }
+
+    if (fulFillmentDate === "") {
+      showToast("Please choose completion date", { type: "caution" });
+      return;
+    }
+
+    setGenerating(true);
     try {
       const res = await axios.post(
         `${environment.constants?.API_BASE}/documents`,
@@ -164,8 +205,8 @@ const PaymentDetailView = ({
           partnerId: partnerId,
           blockId: blockId,
           bankId: bankId,
-          currency: currency,
-          conversionRate: rate,
+          // currency: currency,
+          // conversionRate: rate,
           productId: productId,
           dueDate: dueDate,
           fulFillmentDate: fulFillmentDate,
@@ -173,9 +214,11 @@ const PaymentDetailView = ({
       );
 
       if (res.data) {
+        setGenerating(false);
         showToast("Invoice created successfully", { type: "success" });
       }
     } catch (e) {
+      setGenerating(false);
       showToast("Unexpected Error occurred", { type: "caution" });
     }
   };
@@ -228,13 +271,15 @@ const PaymentDetailView = ({
           <TextField
             css={{ width: "fill" }}
             label="Product name"
-            onChange={handleChangeProduct}
+            placeholder="Input product name for searching..."
+            onChange={(e) => debounced(e.target.value)}
           />
           <Select
             name="products"
             onChange={(e) => {
               setProductId(e.target.value);
             }}
+            disabled={isDisable}
           >
             <option value="">Choose a Product</option>
             {products &&
@@ -254,7 +299,7 @@ const PaymentDetailView = ({
             onChange={(e) => setDueDate(e.target.value)}
           />
           <DateField
-            label="Date of completion"
+            label="Completion date"
             onChange={(e) => setFulFillmentDate(e.target.value)}
           />
         </FormFieldGroup>
@@ -278,7 +323,7 @@ const PaymentDetailView = ({
                 })}
             </Select>
           </Box>
-          <Box css={{ stack: "x", gapX: "small" }}>
+          {/* <Box css={{ stack: "x", gapX: "small" }}>
             <Select
               name="currency"
               label="Currency"
@@ -300,12 +345,18 @@ const PaymentDetailView = ({
               value={rate}
               readOnly
             />
-          </Box>
+          </Box> */}
         </FormFieldGroup>
 
+        {isGenerating === true && (
+          <Box css={{ stack: "x", alignX: "center" }}>
+            <Spinner size="large" />
+          </Box>
+        )}
         <Box css={{ stack: "x", gapX: "small" }}>
           <Button
             type="primary"
+            disabled={isGenerating}
             css={{ width: "fill", alignX: "center" }}
             onPress={() => createInvoice()}
           >
@@ -320,7 +371,7 @@ const PaymentDetailView = ({
   const apiKeyView = (
     <>
       <Inline css={{ font: "body", fontFamily: "ui" }}>
-        There is no Billingo API Key now. You should add API Key first.
+        There is no Billingo API key now. You should add API key first.
       </Inline>
     </>
   );

@@ -3,6 +3,7 @@ import {
   Inline,
   SettingsView,
   TextField,
+  Spinner,
 } from "@stripe/ui-extension-sdk/ui";
 import { showToast } from "@stripe/ui-extension-sdk/utils";
 import {
@@ -22,6 +23,7 @@ const stripe = new Stripe(STRIPE_API_KEY, {
 
 const AppSettings = ({ userContext, environment }: ExtensionContextValue) => {
   const [apiKey, setAPIKey] = useState<any>();
+  const [isLoading, setLoading] = useState(false);
 
   useEffect(() => {
     stripe.apps.secrets
@@ -35,10 +37,11 @@ const AppSettings = ({ userContext, environment }: ExtensionContextValue) => {
 
   const saveSecret = async () => {
     if (apiKey === null || apiKey === "") {
-      showToast("API Key empty", { type: "caution" });
+      showToast("API key is empty", { type: "caution" });
       return;
     }
 
+    setLoading(true);
     const isValid = await getPartners(apiKey);
     if (isValid) {
       const res = await stripe.apps.secrets.create({
@@ -48,6 +51,7 @@ const AppSettings = ({ userContext, environment }: ExtensionContextValue) => {
       });
       setAPIKey(res.payload);
 
+      setLoading(false);
       showToast("Changes saved", { type: "success" });
     }
   };
@@ -69,6 +73,7 @@ const AppSettings = ({ userContext, environment }: ExtensionContextValue) => {
       }
     } catch (e) {
       showToast("The API key is invalid.", { type: "caution" });
+      setLoading(false);
       return false;
     }
   };
@@ -89,11 +94,16 @@ const AppSettings = ({ userContext, environment }: ExtensionContextValue) => {
           required to obtain one.
         </Inline>
         <TextField
-          label="API Key"
+          label="API key"
           onChange={(e) => setAPIKey(e.target.value)}
           placeholder="d4e9237b-739d-11ff-b3bg-23ac0028f368"
           value={apiKey !== null ? apiKey : ""}
         />
+        {isLoading === true && (
+          <Box css={{ stack: "x", alignX: "center" }}>
+            <Spinner size="large" />
+          </Box>
+        )}
       </Box>
     </SettingsView>
   );
